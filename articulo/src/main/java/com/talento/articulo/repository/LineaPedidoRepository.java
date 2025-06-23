@@ -1,6 +1,6 @@
-package com.talento.articulo.repository; // ¡Paquete actualizado!
+package com.talento.articulo.repository;
 
-import com.talento.articulo.model.LineaPedido; // Importa tu clase LineaPedido
+import com.talento.articulo.model.LineaPedido; // Importo clase LineaPedido
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

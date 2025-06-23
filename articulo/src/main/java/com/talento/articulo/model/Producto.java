@@ -1,15 +1,15 @@
 package com.talento.articulo.model;
 
 import jakarta.persistence.*;
-import lombok.Getter; // ¡ASEGÚRATE DE ESTO!
-import lombok.Setter; // ¡ASEGÚRATE DE ESTO!
+import lombok.Getter;
+import lombok.Setter;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
 @Entity
 @Table(name = "producto")
-@Getter // Genera automáticamente los getters
-@Setter // Genera automáticamente los setters
+@Getter // Genero automáticamente los getters
+@Setter // Genero automáticamente los setters
 @NoArgsConstructor
 @AllArgsConstructor
 public class Producto {

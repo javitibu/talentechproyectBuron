@@ -1,7 +1,7 @@
-package com.talento.articulo.controller; // ¡Confirma que este paquete sea correcto!
+package com.talento.articulo.controller; // Confirma que este paquete sea correcto
 
-import com.talento.articulo.model.Producto;         // ¡Confirma que este paquete sea EXACTO!
-import com.talento.articulo.repository.ProductoRepository; // ¡Confirma que este paquete sea EXACTO!
+import com.talento.articulo.model.Producto;         // Confirma que este paquete sea EXACTO
+import com.talento.articulo.repository.ProductoRepository; // Confirma que este paquete sea EXACTO
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,7 +12,7 @@ import java.util.Optional;
 
 @RestController // Indica que esta clase es un controlador REST
 @RequestMapping("/api/productos") // La URL base para este controlador
-@CrossOrigin(origins = "http://localhost:8081") // Permite peticiones desde tu frontend
+@CrossOrigin(origins = "http://localhost:8081") // Permite peticiones desde EL FRONTEND
 public class ProductoController {
 
     @Autowired
@@ -24,7 +24,7 @@ public class ProductoController {
      * @param producto El objeto Producto enviado en el cuerpo de la petición (JSON)
      * @return ResponseEntity con el producto creado y estado HTTP 201 (Created)
      */
-    @PostMapping // ¡Esta es la clave para manejar POST!
+    @PostMapping // esto es para manejar POST!
     public ResponseEntity<Producto> createProducto(@RequestBody Producto producto) {
         // Guarda el producto en la base de datos
         Producto savedProducto = productoRepository.save(producto);
@@ -69,7 +69,6 @@ public class ProductoController {
 
         if (optionalProducto.isPresent()) {
             Producto producto = optionalProducto.get();
-            // Asegúrate que estos campos coinciden con los atributos de tu clase Producto.java
             producto.setNombre(productoDetails.getNombre());
             producto.setPrecio(productoDetails.getPrecio());
             producto.setDescripcion(productoDetails.getDescripcion());

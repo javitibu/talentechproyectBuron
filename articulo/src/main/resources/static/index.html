@@ -87,7 +87,6 @@
             event.preventDefault(); // Evita el envío tradicional del formulario
 
             const data = {
-                // ¡Estos nombres de campo DEBEN COINCIDIR EXACTAMENTE con los atributos de tu clase Producto.java!
                 nombre: document.getElementById('nombre').value,
                 precio: parseFloat(document.getElementById('precio').value), // Convierte a número (decimales)
                 descripcion: document.getElementById('descripcion').value,
@@ -99,9 +98,9 @@
             fetch('/api/productos', { // URL a la que se envía la petición POST
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json' // Indicamos que enviamos JSON
+                    'Content-Type': 'application/json' // Indico que envio JSON
                 },
-                body: JSON.stringify(data) // Convertimos el objeto JS a JSON string
+                body: JSON.stringify(data) // Convertir el objeto JS a JSON string
             })
             .then(response => {
                 if (!response.ok) {

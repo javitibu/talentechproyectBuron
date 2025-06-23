@@ -19,7 +19,6 @@ public class PedidoService {
     private final PedidoRepository pedidoRepository;
     private final ProductoRepository productoRepository;
 
-    // Puedes quitar @Autowired aquí, como hemos visto antes, Spring lo inyecta automáticamente
     public PedidoService(PedidoRepository pedidoRepository, ProductoRepository productoRepository) {
         this.pedidoRepository = pedidoRepository;
         this.productoRepository = productoRepository;
@@ -75,7 +74,7 @@ public class PedidoService {
             productoRepository.save(productoReal);
 
             // 4. Crear la LineaPedido final (entidad JPA)
-            // Usamos el constructor sin argumentos gracias a @NoArgsConstructor en LineaPedido
+            //constructor sin argumentos gracias a @NoArgsConstructor en LineaPedido
             LineaPedido lineaFinal = new LineaPedido();
             lineaFinal.setProducto(productoReal); // Asocia el producto real (de la DB) a la línea
             lineaFinal.setCantidad(lineaSolicitada.getCantidad());
