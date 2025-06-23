@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Productos (API Spring Boot)</title>
+    <link rel="stylesheet" href="style.css"> 
+</head>
+<body>
+
+    <div class="header">
+        <h1>Bienvenido a la Gestión de Productos</h1>
+        <p>Utiliza los formularios para interactuar con tu API de Spring Boot</p>
+    </div>
+
+    <div class="container">
+        <h2>Crear Nuevo Producto (POST)</h2>
+        <form id="createProductForm">
+            <div>
+                <label for="nombre">Nombre del Producto:</label>
+                <input type="text" id="nombre" name="nombre" required>
+            </div>
+            <div>
+                <label for="precio">Precio:</label>
+                <input type="number" id="precio" name="precio" step="0.01" required>
+            </div>
+            <div>
+                <label for="descripcion">Descripción:</label>
+                <textarea id="descripcion" name="descripcion" rows="3"></textarea>
+            </div>
+            <div>
+                <label for="stock">Stock:</label>
+                <input type="number" id="stock" name="stock" required>
+            </div>
+            <div>
+                <label for="categoria">Categoría:</label>
+                <input type="text" id="categoria" name="categoria">
+            </div>
+            <div>
+                <label for="imagenUrl">URL de Imagen:</label>
+                <input type="text" id="imagenUrl" name="imagenUrl">
+            </div>
+            <button type="submit">Crear Producto</button>
+            <div id="createFeedback" class="feedback"></div>
+        </form>
+    </div>
+
+    <hr>
+
+    <div class="container">
+        <h2>Eliminar Producto por ID (DELETE)</h2>
+        <form id="deleteProductForm">
+            <div>
+                <label for="deleteId">ID del Producto a Eliminar:</label>
+                <input type="number" id="deleteId" name="id" required>
+            </div>
+            <button type="submit" class="delete-button">Eliminar Producto</button>
+            <div id="deleteFeedback" class="feedback"></div>
+        </form>
+    </div>
+
+    <hr>
+
+    <div class="container">
+        <h2>Listado de Productos (GET)</h2>
+        <button id="refreshProductsBtn">Actualizar Lista</button>
+        <div id="productsListContainer">
+            <p id="noProductsMessage">No hay productos para mostrar.</p>
+        </div>
+        <div id="listFeedback" class="feedback"></div>
+    </div>
+
+    <script>
+        // Función para mostrar mensajes de feedback (éxito/error)
+        function showFeedback(elementId, message, isSuccess) {
+            const feedbackDiv = document.getElementById(elementId);
+            feedbackDiv.textContent = message;
+            feedbackDiv.className = `feedback ${isSuccess ? 'success' : 'error'}`;
+            feedbackDiv.style.display = 'block'; // Mostrar el div
+            setTimeout(() => {
+                feedbackDiv.style.display = 'none'; // Ocultar después de 5 segundos
+            }, 5000);
+        }
+
+        // --- Lógica para Crear Producto ---
+        document.getElementById('createProductForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Evita el envío tradicional del formulario
+
+            const data = {
+                // ¡Estos nombres de campo DEBEN COINCIDIR EXACTAMENTE con los atributos de tu clase Producto.java!
+                nombre: document.getElementById('nombre').value,
+                precio: parseFloat(document.getElementById('precio').value), // Convierte a número (decimales)
+                descripcion: document.getElementById('descripcion').value,
+                stock: parseInt(document.getElementById('stock').value, 10), // Convierte a número entero
+                categoria: document.getElementById('categoria').value,
+                imagenUrl: document.getElementById('imagenUrl').value
+            };
+
+            fetch('/api/productos', { // URL a la que se envía la petición POST
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json' // Indicamos que enviamos JSON
+                },
+                body: JSON.stringify(data) // Convertimos el objeto JS a JSON string
+            })
+            .then(response => {
+                if (!response.ok) {
+                    // Si la respuesta no es 2xx OK, es un error HTTP
+                    // Intentamos leer el cuerpo del error como JSON si está disponible
+                    return response.json().then(errorData => {
+                        throw new Error(errorData.message || `Error ${response.status}: ${response.statusText}`);
+                    }).catch(() => {
+                        // Si no se puede parsear como JSON, usamos el estado y texto del error
+                        throw new Error(`Error ${response.status}: ${response.statusText}`);
+                    });
+                }
+                return response.json(); // Parseamos la respuesta JSON del servidor
+            })
+            .then(product => {
+                // Si la creación fue exitosa
+                showFeedback('createFeedback', `Producto creado con éxito. ID: ${product.id}, Nombre: ${product.nombre}`, true);
+                document.getElementById('createProductForm').reset(); // Limpia el formulario
+                loadProducts(); // Recarga la lista de productos después de crear uno
+            })
+            .catch(error => {
+                // Manejo de cualquier error durante la petición o procesamiento
+                console.error('Error al crear producto:', error);
+                showFeedback('createFeedback', `Error al crear el producto: ${error.message}`, false);
+            });
+        });
+
+        // --- Lógica para Eliminar Producto ---
+        document.getElementById('deleteProductForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Evita el envío tradicional del formulario
+
+            const id = document.getElementById('deleteId').value;
+            if (!id) {
+                showFeedback('deleteFeedback', 'Por favor, introduce un ID para eliminar.', false);
+                return;
+            }
+            
+            fetch(`/api/productos/${id}`, { // URL con el ID del producto a eliminar
+                method: 'DELETE'
+            })
+            .then(response => {
+                if (response.status === 204 || response.ok) { // 204 No Content es un éxito para DELETE
+                    showFeedback('deleteFeedback', `Producto con ID ${id} eliminado con éxito.`, true);
+                    document.getElementById('deleteProductForm').reset(); // Limpia el formulario
+                    loadProducts(); // Recarga la lista de productos después de eliminar uno
+                } else if (response.status === 404) {
+                    showFeedback('deleteFeedback', `Error: Producto con ID ${id} no encontrado.`, false);
+                } else {
+                    // Si hay otro tipo de error HTTP
+                    return response.json().then(errorData => {
+                        throw new Error(errorData.message || `Error ${response.status}: ${response.statusText}`);
+                    }).catch(() => {
+                        throw new Error(`Error ${response.status}: ${response.statusText}`);
+                    });
+                }
+            })
+            .catch(error => {
+                // Manejo de errores de red o del servidor
+                console.error('Error al eliminar producto:', error);
+                showFeedback('deleteFeedback', `Error al eliminar el producto: ${error.message}`, false);
+            });
+        });
+
+        // --- Lógica para Cargar y Mostrar Productos en una Tabla ---
+        const productsListContainer = document.getElementById('productsListContainer');
+        const noProductsMessage = document.getElementById('noProductsMessage');
+
+        function loadProducts() {
+            fetch('/api/productos')
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(errorData => {
+                            throw new Error(errorData.message || `Error ${response.status}: ${response.statusText}`);
+                        }).catch(() => {
+                            throw new Error(`Error ${response.status}: ${response.statusText}`);
+                        });
+                    }
+                    return response.json();
+                })
+                .then(products => {
+                    productsListContainer.innerHTML = ''; // Limpia el contenido anterior
+
+                    if (products.length === 0) {
+                        noProductsMessage.style.display = 'block'; // Muestra el mensaje si no hay productos
+                        return;
+                    } else {
+                        noProductsMessage.style.display = 'none'; // Oculta el mensaje
+                    }
+
+                    // Crea la tabla
+                    const table = document.createElement('table');
+                    table.className = 'products-table'; // Clase para estilos CSS
+
+                    // Crea el encabezado de la tabla
+                    const thead = document.createElement('thead');
+                    thead.innerHTML = `
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Precio</th>
+                            <th>Descripción</th>
+                            <th>Stock</th>
+                            <th>Categoría</th>
+                            <th>Imagen URL</th>
+                        </tr>
+                    `;
+                    table.appendChild(thead);
+
+                    // Crea el cuerpo de la tabla y llena con los datos de los productos
+                    const tbody = document.createElement('tbody');
+                    products.forEach(product => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${product.id}</td>
+                            <td>${product.nombre}</td>
+                            <td>$${product.precio ? product.precio.toFixed(2) : '0.00'}</td>
+                            <td>${product.descripcion || 'N/A'}</td>
+                            <td>${product.stock}</td>
+                            <td>${product.categoria || 'N/A'}</td>
+                            <td><a href="${product.imagenUrl}" target="_blank">${product.imagenUrl ? 'Ver Imagen' : 'N/A'}</a></td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                    table.appendChild(tbody);
+
+                    productsListContainer.appendChild(table);
+                    showFeedback('listFeedback', 'Lista de productos actualizada.', true);
+                })
+                .catch(error => {
+                    console.error('Error al cargar productos:', error);
+                    showFeedback('listFeedback', `Error al cargar la lista de productos: ${error.message}`, false);
+                    productsListContainer.innerHTML = ''; // Limpia la tabla en caso de error
+                    noProductsMessage.style.display = 'block'; // Muestra el mensaje de "no hay productos"
+                });
+        }
+
+        // Carga los productos cuando la página se carga completamente
+        window.addEventListener('load', loadProducts);
+
+        // Agrega un listener al botón de actualizar
+        document.getElementById('refreshProductsBtn').addEventListener('click', loadProducts);
+
+    </script>
+</body>
+</html>
